@@ -581,12 +581,27 @@ function isStatementEmptyStatement(statement) {
 function sortImports(imports) {
   const staticImports = [];
   const nonStaticImports = [];
+  const importComments = [];
 
   if (imports !== undefined) {
     for (let i = 0; i < imports.length; i++) {
       if (imports[i].children.Static !== undefined) {
+        if (
+          imports[i].leadingComments != undefined &&
+          imports[i].leadingComments.length > 0
+        ) {
+          importComments.push(...imports[i].leadingComments);
+          delete imports[i].leadingComments;
+        }
         staticImports.push(imports[i]);
       } else if (imports[i].children.emptyStatement === undefined) {
+        if (
+          imports[i].leadingComments != undefined &&
+          imports[i].leadingComments.length > 0
+        ) {
+          importComments.push(...imports[i].leadingComments);
+          delete imports[i].leadingComments;
+        }
         nonStaticImports.push(imports[i]);
       }
     }
@@ -599,6 +614,14 @@ function sortImports(imports) {
       );
     staticImports.sort(comparator);
     nonStaticImports.sort(comparator);
+
+    if (importComments.length > 0) {
+      if (nonStaticImports.length > 0) {
+        nonStaticImports[0].leadingComments = importComments;
+      } else if (staticImports.length > 0) {
+        staticImports[0].leadingComments = importComments;
+      }
+    }
   }
 
   return {
